@@ -15,6 +15,8 @@ function StabilityAnalysis({ onResultsReceived }) {
       setEquation(new Array(newDegree + 1).fill(''));
       setError(null);
       }   
+    }else {
+      setError('Degree must be a positive integer');
     }
     
   };
@@ -29,10 +31,11 @@ function StabilityAnalysis({ onResultsReceived }) {
     setLoading(true);
 
     try {
-      // console.log(equation) 
-      const newEquation = equation.map((coef, index) => [degree - index, parseFloat(coef)]);
-      // console.log(newEquation);
-      const results = await analyzeStability({ equation: newEquation });
+      console.log(equation) 
+      const results = await analyzeStability({ 
+        degree: degree,
+        equation: equation 
+      });
       onResultsReceived(results);
     } catch (error) {
       console.error('Error analyzing stability:', error);
@@ -45,9 +48,8 @@ function StabilityAnalysis({ onResultsReceived }) {
   return (
     <div className="stability-analysis">
       <h2>Routh Stability Analysis</h2>
-
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
+      <form onSubmit={handleSubmit} className="stability-form">
+        <div className="form-group degree-group">
           <label htmlFor="degree">Degree of Equation:</label>
           <input
             type="number"
@@ -59,26 +61,39 @@ function StabilityAnalysis({ onResultsReceived }) {
             min="0"
             max="20"
           />
-
-          <label>Characteristic Equation Coefficients:</label>
-          { equation.map((eq, index) => (
-            <input
-              key={index}
-              type="number"
-              value={eq}
-              onChange={(e) => {
-                const newEquation = [...equation];
-                newEquation[index] = e.target.value;
-                setEquation(newEquation);
-                setError(null);
-              }}
-              placeholder={`Coefficient of x^${degree - index}`}
-            />
-          ))}
         </div>
-        {error && <p className="error">{error}</p>}
-
-        <button type="submit" disabled={loading}>
+        
+        <div className="form-group coefficients-group">
+          <label>Characteristic Equation Coefficients:</label>
+          <div className="coefficients-container">
+            {equation.map((coef, index) => (
+              <div className="coefficient-input" key={index}>
+                <label className="power-label">s<sup>{degree - index}</sup></label>
+                <input
+                  type="number"
+                  value={coef}
+                  onChange={(e) => {
+                    const newEquation = [...equation];
+                    newEquation[index] = e.target.value;
+                    setEquation(newEquation);
+                    setError(null);
+                  }}
+                  placeholder={`Coefficient of s^${degree - index}`}
+                  className="coefficient-field"
+                  step="any"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className={`submit-button ${loading ? 'loading' : ''}`}
+        >
           {loading ? 'Analyzing...' : 'Analyze Stability'}
         </button>
       </form>

@@ -29,14 +29,15 @@ def stability():
     """
     Perform Routh stability analysis
     Expected JSON input:
-    {
-        "equation": "s^5+s^4+10s^3+72s^2+152s+240"
+    {   
+        "degree": 3,
+        "equation": [list of coefficients] from highest power to lowest # Example: [1, 1, 10, 72, 152, 240]
     }
     """
     data = request.json
     
     try:
-        result = routh_stability_analysis(data['equation'])
+        result = routh_stability_analysis(data['equation'], data['degree'])
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
