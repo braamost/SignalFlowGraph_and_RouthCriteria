@@ -78,7 +78,6 @@ function StabilityAnalysis({ onResultsReceived }) {
                     setEquation(newEquation);
                     setError(null);
                   }}
-                  placeholder={`Coefficient of s^${degree - index}`}
                   className="coefficient-field"
                   step="any"
                 />
