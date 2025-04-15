@@ -2,21 +2,40 @@ import React, { useState } from 'react';
 import { analyzeStability } from '../services/api';
 
 function StabilityAnalysis({ onResultsReceived }) {
-  const [equation, setEquation] = useState('');
+  const [error, setError] = useState(null);
+  const [degree, setDegree] = useState(3);
+  const [equation, setEquation] = useState(new Array(4).fill(''));
   const [loading, setLoading] = useState(false);
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!equation) {
-      alert('Please enter a characteristic equation');
-      return;
+
+  const handleDegreeChange = (e) => {
+    if(!isNaN(e.target.value)) {
+      const newDegree = parseInt(e.target.value);
+      if(newDegree>0){
+      setDegree(newDegree);
+      setEquation(new Array(newDegree + 1).fill(''));
+      setError(null);
+      }   
+    }else {
+      setError('Degree must be a positive integer');
     }
     
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (equation.some(coef => coef === '')) {
+      setError('Please fill in all coefficients of the characteristic equation');
+      return;
+    }
     setLoading(true);
-    
+
     try {
-      const results = await analyzeStability({ equation });
+      console.log(equation) 
+      const results = await analyzeStability({ 
+        degree: degree,
+        equation: equation 
+      });
       onResultsReceived(results);
     } catch (error) {
       console.error('Error analyzing stability:', error);
@@ -25,29 +44,56 @@ function StabilityAnalysis({ onResultsReceived }) {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="stability-analysis">
       <h2>Routh Stability Analysis</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="equation">Characteristic Equation:</label>
+      <form onSubmit={handleSubmit} className="stability-form">
+        <div className="form-group degree-group">
+          <label htmlFor="degree">Degree of Equation:</label>
           <input
-            type="text"
-            id="equation"
-            value={equation}
-            onChange={(e) => setEquation(e.target.value)}
-            placeholder="e.g., s^5+s^4+10s^3+72s^2+152s+240"
-            className="equation-input"
+            type="number"
+            id="degree"
+            value={degree}
+            onChange={handleDegreeChange}
+            placeholder="3"
+            className="degree-input"
+            min="0"
+            max="20"
           />
-          <p className="help-text">
-            Enter the characteristic equation using the format shown in the placeholder.
-            Use s^n for powers of s.
-          </p>
         </div>
         
-        <button type="submit" disabled={loading}>
+        <div className="form-group coefficients-group">
+          <label>Characteristic Equation Coefficients:</label>
+          <div className="coefficients-container">
+            {equation.map((coef, index) => (
+              <div className="coefficient-input" key={index}>
+                <label className="power-label">s<sup>{degree - index}</sup></label>
+                <input
+                  type="number"
+                  value={coef}
+                  onChange={(e) => {
+                    const newEquation = [...equation];
+                    newEquation[index] = e.target.value;
+                    setEquation(newEquation);
+                    setError(null);
+                  }}
+                  placeholder={`Coefficient of s^${degree - index}`}
+                  className="coefficient-field"
+                  step="any"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className={`submit-button ${loading ? 'loading' : ''}`}
+        >
           {loading ? 'Analyzing...' : 'Analyze Stability'}
         </button>
       </form>
