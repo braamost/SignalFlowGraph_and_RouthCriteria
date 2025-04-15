@@ -2,21 +2,37 @@ import React, { useState } from 'react';
 import { analyzeStability } from '../services/api';
 
 function StabilityAnalysis({ onResultsReceived }) {
-  const [equation, setEquation] = useState('');
+  const [error, setError] = useState(null);
+  const [degree, setDegree] = useState(3);
+  const [equation, setEquation] = useState(new Array(4).fill(''));
   const [loading, setLoading] = useState(false);
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!equation) {
-      alert('Please enter a characteristic equation');
-      return;
+
+  const handleDegreeChange = (e) => {
+    if(!isNaN(e.target.value)) {
+      const newDegree = parseInt(e.target.value);
+      if(newDegree>0){
+      setDegree(newDegree);
+      setEquation(new Array(newDegree + 1).fill(''));
+      setError(null);
+      }   
     }
     
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (equation.some(coef => coef === '')) {
+      setError('Please fill in all coefficients of the characteristic equation');
+      return;
+    }
     setLoading(true);
-    
+
     try {
-      const results = await analyzeStability({ equation });
+      // console.log(equation) 
+      const newEquation = equation.map((coef, index) => [degree - index, parseFloat(coef)]);
+      // console.log(newEquation);
+      const results = await analyzeStability({ equation: newEquation });
       onResultsReceived(results);
     } catch (error) {
       console.error('Error analyzing stability:', error);
@@ -25,28 +41,43 @@ function StabilityAnalysis({ onResultsReceived }) {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="stability-analysis">
       <h2>Routh Stability Analysis</h2>
-      
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="equation">Characteristic Equation:</label>
+          <label htmlFor="degree">Degree of Equation:</label>
           <input
-            type="text"
-            id="equation"
-            value={equation}
-            onChange={(e) => setEquation(e.target.value)}
-            placeholder="e.g., s^5+s^4+10s^3+72s^2+152s+240"
-            className="equation-input"
+            type="number"
+            id="degree"
+            value={degree}
+            onChange={handleDegreeChange}
+            placeholder="3"
+            className="degree-input"
+            min="0"
+            max="20"
           />
-          <p className="help-text">
-            Enter the characteristic equation using the format shown in the placeholder.
-            Use s^n for powers of s.
-          </p>
+
+          <label>Characteristic Equation Coefficients:</label>
+          { equation.map((eq, index) => (
+            <input
+              key={index}
+              type="number"
+              value={eq}
+              onChange={(e) => {
+                const newEquation = [...equation];
+                newEquation[index] = e.target.value;
+                setEquation(newEquation);
+                setError(null);
+              }}
+              placeholder={`Coefficient of x^${degree - index}`}
+            />
+          ))}
         </div>
-        
+        {error && <p className="error">{error}</p>}
+
         <button type="submit" disabled={loading}>
           {loading ? 'Analyzing...' : 'Analyze Stability'}
         </button>
