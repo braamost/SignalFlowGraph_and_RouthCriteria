@@ -12,8 +12,11 @@ function ResultDisplay({ results }) {
         <ul>
           {results.forward_paths && results.forward_paths.map((path, index) => (
             <li key={`path-${index}`}>
-             Path {index + 1}: {path.join(' → ')} (Gain: {typeof results.forward_path_gains[index] === 'number' ? results.forward_path_gains[index].toFixed(3) : results.forward_path_gains[index]})
-            </li>
+             Path {index + 1}: {path.join(' → ')} (Gain: {
+                                                            /^[\d+\-*/().\s]+$/.test(results.forward_path_gains[index])
+                                                               ? eval(results.forward_path_gains[index]).toFixed(3)
+                                                               : results.forward_path_gains[index]
+          })</li>
           ))}
         </ul>
       </div>
@@ -23,28 +26,40 @@ function ResultDisplay({ results }) {
         <ul>
           {results.loops && results.loops.map((loop, index) => (
             <li key={`loop-${index}`}>
-             Loop {index + 1}: {loop.join(' → ')} (Gain: {typeof results.loop_gains[index] === 'number' ? results.loop_gains[index].toFixed(3) : results.loop_gains[index]})
-
-            </li>
+             Loop {index + 1}: {loop.join(' → ')} (Gain: {
+                                                            /^[\d+\-*/().\s]+$/.test(results.loop_gains[index])
+                                                                ? eval(results.loop_gains[index]).toFixed(3)
+                                                                : results.loop_gains[index]
+          })</li>
           ))}
         </ul>
       </div>
       
       <div className="result-section">
         <h3>Delta Values</h3>
-        <p>Δ = {typeof results.delta === 'number' ? results.delta.toFixed(3) : results.delta}</p>
+        <p>Δ = {
+                 /^[\d+\-*/().\s]+$/.test(results.delta)
+                      ? eval(results.delta).toFixed(3)
+                      : results.delta
+       }</p>
         <ul>
           {results.delta_values && results.delta_values.map((delta, index) => (
             <li key={`delta-${index}`}>
-              Δ{index + 1} = {typeof delta === 'number' ? delta.toFixed(3) : delta}
-            </li>
+              Δ{index + 1} = {/^[\d+\-*/().\s]+$/.test(delta)
+                                ? eval(delta).toFixed(3)
+                                : delta
+          }</li>
           ))}
         </ul>
       </div>
       
       <div className="result-section">
         <h3>Transfer Function</h3>
-        <p>{results.transfer_function}</p>
+        <p>{
+            /^[\d+\-*/().\s]+$/.test(results.transfer_function) // check if only numbers/operators
+                 ? eval(results.transfer_function)
+                 : results.transfer_function
+      }</p>
       </div>
     </div>
   );
