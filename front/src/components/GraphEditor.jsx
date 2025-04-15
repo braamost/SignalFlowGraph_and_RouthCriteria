@@ -5,45 +5,70 @@ import ReactFlow, {
   Background,
   useNodesState,
   useEdgesState,
+  MarkerType,
+  Handle,
+  Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { analyzeGraph } from '../services/api';
 
-const initialNodes = [
-  { id: '1', position: { x: 100, y: 100 }, data: { label: 'Node 1' } },
-  { id: '2', position: { x: 300, y: 100 }, data: { label: 'Node 2' } },
-];
-
-const initialEdges = [
-  { id: 'e1-2', source: '1', target: '2', label: '1.0' },
-];
+const CustomNode = ({ data }) => {
+  return (
+    <div style={{ 
+      padding: '10px', 
+      border: '1px solid #000', 
+      borderRadius: '50px',
+      background: 'white',
+      textAlign: 'center',
+      minWidth: '25px',
+    }}>
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ width: '10px', height: '10px' }}
+      />
+      {data.label}
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ width: '10px', height: '10px' }}
+      />
+    </div>
+  );
+};
+const nodeTypes = {
+  custom: CustomNode,
+};
+const edgeTypes = ['default', 'straight', 'step', 'smoothstep', 'bezier'];
 
 function GraphEditor({ onResultsReceived }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [nodeName, setNodeName] = useState('');
   const [selectedEdge, setSelectedEdge] = useState(null);
   const [edgeGain, setEdgeGain] = useState('1.0');
+  const [edgeType, setEdgeType] = useState('bezier');
 
   const onConnect = useCallback((params) => {
     const newEdge = {
       ...params,
       id: `e${params.source}-${params.target}`,
       label: '1.0',
+      type: edgeType,
+      markerEnd: { type: MarkerType.ArrowClosed }
     };
     setEdges((eds) => addEdge(newEdge, eds));
-  }, [setEdges]);
+  }, [setEdges, edgeType]);
 
   const addNode = () => {
     if (!nodeName) return;
-    
     const newId = (nodes.length + 1).toString();
     const newNode = {
       id: newId,
       position: { x: 100 + Math.random() * 200, y: 100 + Math.random() * 100 },
       data: { label: nodeName },
+      type: 'custom', 
     };
-    
     setNodes((nds) => [...nds, newNode]);
     setNodeName('');
   };
@@ -51,19 +76,18 @@ function GraphEditor({ onResultsReceived }) {
   const selectEdge = (edge) => {
     setSelectedEdge(edge);
     setEdgeGain(edge.label || '1.0');
+    setEdgeType(edge.type || 'bezier');
   };
 
   const updateEdgeGain = () => {
     if (!selectedEdge) return;
-    
-    setEdges((eds) => 
-      eds.map((e) => 
-        e.id === selectedEdge.id 
-          ? { ...e, label: edgeGain } 
+    setEdges((eds) =>
+      eds.map((e) =>
+        e.id === selectedEdge.id
+          ? { ...e, label: edgeGain, type: edgeType }
           : e
       )
     );
-    
     setSelectedEdge(null);
     setEdgeGain('1.0');
   };
@@ -78,7 +102,7 @@ function GraphEditor({ onResultsReceived }) {
           gain: parseFloat(edge.label) || 1.0
         }))
       };
-      
+      console.log(graphData);
       const results = await analyzeGraph(graphData);
       onResultsReceived(results);
     } catch (error) {
@@ -112,14 +136,23 @@ function GraphEditor({ onResultsReceived }) {
                 onChange={(e) => setEdgeGain(e.target.value)}
                 placeholder="Gain"
               />
-              <button onClick={updateEdgeGain}>Update Gain</button>
+              <select 
+                value={edgeType}
+                onChange={(e) => setEdgeType(e.target.value)}
+              >
+                {edgeTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <button onClick={updateEdgeGain}>Update</button>
               <button onClick={() => setSelectedEdge(null)}>Cancel</button>
             </>
           ) : (
-            <p>Select an edge to edit its gain</p>
+            <p>Select an edge to edit it</p>
           )}
-        </div>
-        
+        </div>     
         <button className="analyze-button" onClick={analyzeCurrentGraph}>
           Analyze Graph
         </button>
@@ -129,6 +162,7 @@ function GraphEditor({ onResultsReceived }) {
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
