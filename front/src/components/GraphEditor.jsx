@@ -23,12 +23,26 @@ const CustomNode = ({ data }) => {
       minWidth: '25px',
     }}>
       <Handle
+        id = "top"
+        type="source"
+        position={Position.Top}
+        style={{ width: '10px', height: '10px' }}
+      />
+      <Handle
+        id = "bottom"
+        type="source"
+        position={Position.Bottom}
+        style={{ width: '10px', height: '10px' }}
+      />
+      <Handle
+        id = "left"
         type="target"
         position={Position.Left}
         style={{ width: '10px', height: '10px' }}
       />
       {data.label}
       <Handle
+        id = "right"
         type="source"
         position={Position.Right}
         style={{ width: '10px', height: '10px' }}
@@ -50,16 +64,35 @@ function GraphEditor({ onResultsReceived }) {
   const [edgeType, setEdgeType] = useState('bezier');
 
   const onConnect = useCallback((params) => {
-    const newEdge = {
-      ...params,
-      id: `e${params.source}-${params.target}`,
-      label: '1.0',
-      type: edgeType,
-      markerEnd: { type: MarkerType.ArrowClosed }
-    };
-    setEdges((eds) => addEdge(newEdge, eds));
+    if (params.source === params.target) {
+      console.log("Cannot connect a node to itself");
+      return;
+    }
+  
+    const sourcePos = params.sourceHandle || 'right';
+    const targetPos = params.targetHandle || 'left';
+  
+    const isValidConnection = (
+      (sourcePos === 'top' && targetPos === 'left') ||
+      (sourcePos === 'right' && targetPos === 'left') ||
+      (sourcePos === 'bottom' && targetPos === 'left')
+    );
+  
+    if (isValidConnection) {
+      const newEdge = {
+        ...params,
+        id: `e${params.source}-${params.target}-${sourcePos}-${targetPos}`,
+        label: '1.0',
+        type: edgeType,
+        markerEnd: { type: MarkerType.ArrowClosed }
+      };
+  
+      setEdges((eds) => addEdge(newEdge, eds));
+    } else {
+      console.log('Invalid connection combination');
+    }
   }, [setEdges, edgeType]);
-
+  
   const addNode = () => {
     if (!nodeName) return;
     const newId = (nodes.length + 1).toString();
@@ -80,6 +113,7 @@ function GraphEditor({ onResultsReceived }) {
   };
 
   const updateEdgeGain = () => {
+    
     if (!selectedEdge) return;
     setEdges((eds) =>
       eds.map((e) =>
@@ -99,7 +133,7 @@ function GraphEditor({ onResultsReceived }) {
         branches: edges.map(edge => ({
           from: edge.source,
           to: edge.target,
-          gain: parseFloat(edge.label) || 1.0
+          gain: (edge.label) || 1.0
         }))
       };
       console.log(graphData);
