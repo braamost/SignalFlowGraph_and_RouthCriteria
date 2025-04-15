@@ -37,6 +37,11 @@ function StabilityAnalysis({ onResultsReceived }) {
         equation: equation 
       });
       onResultsReceived(results);
+      window.scrollTo({
+        top: 100000,
+        left: 100000,
+        behavior: 'smooth',
+      });
     } catch (error) {
       console.error('Error analyzing stability:', error);
       alert('Error analyzing stability. See console for details.');
