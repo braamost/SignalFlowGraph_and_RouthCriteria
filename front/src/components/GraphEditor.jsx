@@ -13,7 +13,6 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { analyzeGraph } from '../services/api';
 
-// Smaller Custom Node with simplified design
 const CustomNode = ({ data }) => {
   return (
     <div style={{ 

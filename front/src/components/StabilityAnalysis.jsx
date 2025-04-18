@@ -28,6 +28,11 @@ function StabilityAnalysis({ onResultsReceived }) {
       setError('Please fill in all coefficients of the characteristic equation');
       return;
     }
+
+    if(equation[0] === '0'){
+      setError('Leading coefficient cannot be 0');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -44,7 +49,7 @@ function StabilityAnalysis({ onResultsReceived }) {
       });
     } catch (error) {
       console.error('Error analyzing stability:', error);
-      alert('Error analyzing stability. See console for details.');
+      setError(`${error.response.statusText} . See console for details.`);
     } finally {
       setLoading(false);
     }
@@ -73,7 +78,6 @@ function StabilityAnalysis({ onResultsReceived }) {
           <div className="coefficients-container">
             {equation.map((coef, index) => (
               <div className="coefficient-input" key={index}>
-                <label className="power-label">s<sup>{degree - index}</sup></label>
                 <input
                   type="number"
                   value={coef}
@@ -86,6 +90,7 @@ function StabilityAnalysis({ onResultsReceived }) {
                   className="coefficient-field"
                   step="any"
                 />
+                {degree - index > 0 && <label className="power-label">s{degree - index != 1 && <sup>{degree - index}</sup>} + </label>}
               </div>
             ))}
           </div>

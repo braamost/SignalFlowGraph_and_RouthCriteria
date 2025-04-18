@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import GraphEditor from '../components/GraphEditor';
-import ResultDisplay from '../components/ResultDisplay';
+import GraphResultDisplay from '../components/GraphResultDisplay';
 import "../styles/App.css"
 
 function SignalFlowPage() {
@@ -17,7 +17,7 @@ function SignalFlowPage() {
       <main>
         <div className="signal-flow-container">
           <GraphEditor onResultsReceived={setGraphResults} />
-          {graphResults && <ResultDisplay results={graphResults} />}
+          {graphResults && <GraphResultDisplay results={graphResults} />}
         </div>
       </main>
     </div>

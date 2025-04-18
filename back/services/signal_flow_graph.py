@@ -65,10 +65,6 @@ def analyze_signal_flow_graph(nodes, branches):
             gain *= edge_data['weight']
         loop_gains.append(gain)
     
-    # TODO: Implement non-touching loops detection
-    # TODO: Calculate delta values
-    # TODO: Calculate transfer function // finished 
-    
     # Placeholder for now
     delta = 1.0
     delta_values = [1.0] * len(forward_paths)
